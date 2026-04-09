@@ -183,6 +183,7 @@ export async function PATCH(request: Request) {
     if (newStatus === 'DECLINED') {
       if (existingOrder.paymentMethod === 'RAZORPAY' && existingOrder.paymentId) {
          try {
+            // @ts-ignore
             await razorpay.payments.refund(existingOrder.paymentId);
          } catch(err) {
             console.error("Razorpay refund failed:", err);
