@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: nammaconnect-backend
+    env: node
+    plan: starter
+    buildCommand: "./build.sh"
+    startCommand: "npm run start"
+    envVars:
+      - key: PORT
+        value: '3001'
+      - key: DATABASE_URL
+        value: "file:../data/dev.db"
+    disk:
+      name: nammaconnect-data
+      mountPath: /opt/render/project/data
+      sizeGB: 1

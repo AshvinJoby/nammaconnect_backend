@@ -1,0 +1,51 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  password  String
+  loginType String   // "CUSTOMER" or "VENDOR"
+  lat       Float?
+  lng       Float?
+  imageUrl  String?
+  createdAt DateTime @default(now())
+}
+
+model Order {
+  id           String   @id @default(uuid())
+  item         String
+  status       String   @default("PENDING") // PENDING, PREPARING, DELIVERING, FINISHED
+  vendorId     String
+  customerId   String
+  deliveryPartnerId String?
+  customerName String?
+  quantity     Int      @default(1)
+  price        Float    @default(0)
+  paymentMethod String  @default("COD")
+  paymentId    String?
+  vLat         Float?
+  vLng         Float?
+  cLat         Float?
+  cLng         Float?
+  createdAt    DateTime @default(now())
+}
+
+model MenuItem {
+  id          String   @id @default(uuid())
+  name        String
+  price       Float
+  isAvailable Boolean  @default(true)
+  imageUrl    String?
+  vendorId    String
+  createdAt   DateTime @default(now())
+}
