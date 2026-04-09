@@ -1,7 +1,4 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-
 export async function POST(request: Request) {
   try {
     const formData = await request.formData();
@@ -11,25 +8,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    // Save perfectly onto the frontend's static serving layout seamlessly
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
+    if (!process.env.IMGBB_API_KEY) {
+      return NextResponse.json({ error: 'System architecture improperly scaled! Missing Image API Key.' }, { status: 500 });
     }
 
-    const uniqueName = `${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
-    const filePath = path.join(uploadDir, uniqueName);
+    // Pass the natively uploaded boundaries directly onto IMGBB Form
+    const imgbbFormData = new FormData();
+    imgbbFormData.append("image", file);
 
-    fs.writeFileSync(filePath, buffer);
+    const imgbbRes = await fetch(`https://api.imgbb.com/1/upload?key=${process.env.IMGBB_API_KEY}`, {
+      method: "POST",
+      body: imgbbFormData
+    });
 
-    const publicUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/uploads/${uniqueName}`;
+    const imgData = await imgbbRes.json();
 
-    return NextResponse.json({ url: publicUrl }, { status: 200 });
+    if (!imgData.success) {
+      return NextResponse.json({ error: 'Blob rejection from external image server.' }, { status: 500 });
+    }
+
+    // IMGBB dynamically pipes out the fully persistent URL!
+    return NextResponse.json({ url: imgData.data.url }, { status: 200 });
   } catch (error) {
     console.error('File Upload error:', error);
-    return NextResponse.json({ error: 'Internal File Upload execution failed' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal File Cloud Relay failed' }, { status: 500 });
   }
 }
+
